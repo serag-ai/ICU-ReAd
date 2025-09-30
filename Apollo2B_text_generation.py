@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
 import torch
 import pandas as pd
 import os
@@ -11,100 +8,49 @@ import time
 import datetime
 import gc
 import random
-from nltk.corpus import stopwords
 import re
 import transformers
 import torch.nn as nn
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
-from sklearn.metrics import classification_report, accuracy_score, roc_auc_score, f1_score
-from sklearn.preprocessing import label_binarize
 import torch.nn.functional as F
 import evaluate 
 from datasets import (
-    load_dataset,
     Dataset,
     DatasetDict)
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
-    TrainingArguments,
     pipeline,
-    logging,
 )
 from peft import (
     LoraConfig,
     prepare_model_for_kbit_training,
-    get_peft_model
+    get_peft_model, 
+    PeftModel
 )
 from torch.utils.data import (
-    TensorDataset,
-    DataLoader,
-    RandomSampler,
-    SequentialSampler,
-    random_split,
     Dataset)
 
-#from trl import SFTTrainer
-from peft import PeftModel
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 os.environ['TORCH_USE_CUDA_DSA'] = "1"
 os.environ["CUDA_LAUNCH_BLOCKING"] = '1'
 os.environ['TRANSFORMERS_OFFLINE'] = '0'
 
-w_token ="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"
-r_token ="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"
+
+w_token ='YOUR_TOKEN'
+r_token ='YOUR_TOKEN'
 
 
-# In[2]:
+
 
 
 from huggingface_hub import login
-output_dir = "/acfs-home/hoh4002/serag_AI_lab/users/hoh4002/eICU/Gemma_August/output"
-
-commit_message = "Fine-tuning FreedomIntelligence/Apollo-2B on ICU dataset with shorter prompt"
-
-model_name = "FreedomIntelligence/Apollo-2B"
 # HUGGINGFACE_TOKEN = os.environ.get("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")
 # login(token=HUGGINGFACE_TOKEN)
 
-
-# In[3]:
-
-
-#commit_message = "Fine-tuning llama2-chat-7b on ICU dataset with shorter prompt"
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_use_double_quant=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.bfloat16
-)
-
-#"TheBloke/Mistral-7B-Instruct-v0.2-GPTQ"
-model = AutoModelForCausalLM.from_pretrained(model_name, #model_name
-                                             quantization_config=bnb_config,
-                                             device_map="auto",# automatically figures out how to best use CPU + GPU for loading model
-                                             token=r_token,
-                                             trust_remote_code=False) # prevents running custom model files on your machine
-                                             #revision="main") # which version of model to use in repo
-
-tokenizer = AutoTokenizer.from_pretrained(model_name, #model_name
-                                        token=r_token, add_eos_token=True, use_fast=True)
-
-
-# In[4]:
-
-
-tokenizer.padding_side = 'right'
-tokenizer.pad_token = tokenizer.eos_token
-tokenizer.add_eos_token = True
-tokenizer.add_bos_token, tokenizer.add_eos_token
-
-
-
-# In[5]:
-
+#Loading the files (Full dataset)
 
 def load_file(data_file):
     df = pd.read_csv(data_file)
@@ -115,10 +61,7 @@ def load_file(data_file):
 file_path_2 = '/acfs-home/hoh4002/serag_AI_lab/users/hoh4002/eICU/llm.csv'
 df2 = load_file(file_path_2)
 
-
-# In[6]:
-
-
+#Data Pre_processing
 def filter_unwanted_words(diseases, unwanted_words):
     return [disease for disease in diseases if not any(word in disease for word in unwanted_words)]
 
@@ -127,7 +70,7 @@ def create_prompts(df):
     prompts = []
     admission_responses = []
     
-    unwanted_words = ['performed']  # Add any other unwanted words here
+    unwanted_words = ['performed'] 
     
     disease_columns = [col for col in df.columns if col.startswith('Diagnose_')]
     
@@ -170,36 +113,64 @@ def create_prompts(df):
         ICU Stay Duration: {row['unitdischargeoffset']} minutes
 
         """
-        # Admission Type: {admission_type}
-        # Response: {admission_response}
 
-        # Add the comment to the list
         prompts.append(comment.strip())
         admission_responses.append(admission_response.strip())
 
     return prompts, admission_responses
 
 
-# In[7]:
-
-
+#Creating the prompts and answers 
 prompts, answers = create_prompts(df2)
 
 
-# In[9]:
 
 
-print(prompts[300])
-print(answers[300])
+#print(prompts[300])
+#print(answers[300])
+
+#print(prompts[14])
+#print( answers[14])
+
+#######################################################################
 
 
-# In[ ]:
+# commit message and model name
+commit_message = "Fine-tuning FreedomIntelligence/Apollo-2B on ICU dataset with shorter prompt"
+
+model_name = "FreedomIntelligence/Apollo-2B"
 
 
-print(prompts[114])
-print( answers[114])
+#Configurations 
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_use_double_quant=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16
+)
+
+#model and tokenizer loading 
+model = AutoModelForCausalLM.from_pretrained(model_name, #model_name
+                                             quantization_config=bnb_config,
+                                             device_map="auto",# automatically figures out how to best use CPU + GPU for loading model
+                                             token=r_token,
+                                             trust_remote_code=False) # prevents running custom model files on your machine
+                                             #revision="main") # which version of model to use in repo
+
+tokenizer = AutoTokenizer.from_pretrained(model_name, #model_name
+                                        token=r_token, add_eos_token=True, use_fast=True)
+
+
+tokenizer.padding_side = 'right'
+tokenizer.pad_token = tokenizer.eos_token
+tokenizer.add_eos_token = True
+tokenizer.add_bos_token, tokenizer.add_eos_token
+
 
 model.eval() # model in evaluation mode (dropout modules are deactivated)
+
+
+#Instruction strings for the prompt
 instructions_string = """
 You are a virtual assistant in the intensive care unit (ICU), specialized in analyzing patient data and answering questions.
 
@@ -223,16 +194,7 @@ print('------------------------------------------------')
 print(tokenizer.batch_decode(outputs)[0])
 
 
-# In[ ]:
-
-
-print(prompts[90])
-print( answers[90])
-
-
-# In[18]:
-
-
+#Testing the model performance with pipeline
 input = prompts[90]
 pl = pipeline("text-generation", model="FreedomIntelligence/Apollo-2B", tokenizer="FreedomIntelligence/Apollo-2B", max_new_tokens=512, device_map="cuda")
 question = "Would this patient get re-admitted to Intensive Care Unit?"
@@ -242,6 +204,7 @@ print(answer)
 
 
 
+#Spliting the dataset
 train_summaries, temp_summaries, train_labels, temp_labels = train_test_split(
     prompts, answers, test_size=0.1, shuffle=True, random_state=0, stratify=answers
 )
@@ -257,6 +220,7 @@ dev = pd.DataFrame({'summary': dev_summaries, 'label': dev_labels})
 # Create a DataFrame for the test set with separate columns for summaries and labels
 test = pd.DataFrame({'summary': test_summaries, 'label': test_labels})
 
+#Saving the dataset splits for productivity
 train.to_csv("train_set_r32_apollo.csv")
 dev.to_csv("dev_set_r32_apollo.csv")
 test.to_csv("test_set_r32_apollo.csv")
@@ -280,8 +244,8 @@ dataset = DatasetDict({
 })
 
 
-# In[9]:
 
+#Fine tuning the model! 
 
 model.train() # model in training mode (dropout modules are activated)
 
@@ -314,10 +278,6 @@ model = get_peft_model(model, config)
 # print_trainable_parameters(model)
 model.print_trainable_parameters()
 
-
-# In[10]:
-
-
 from datasets import Dataset, DatasetDict
 train_list = train.to_dict(orient='records')
 dev_list = dev.to_dict(orient='records')
@@ -327,8 +287,6 @@ dataset = DatasetDict({
 })
 dataset
 
-
-# In[13]:
 
 
 #data = load_dataset('csv', data_files={'train': '/content/drive/MyDrive/Colab Notebooks/summaries_train.txt'})
@@ -372,16 +330,10 @@ tokenized_data = dataset.map(tokenize_function, batched=True)
 tokenizer.pad_token = tokenizer.eos_token
 
 
-# In[14]:
-
-
 # setting pad token
 tokenizer.pad_token = tokenizer.eos_token
 # data collator
 data_collator = transformers.DataCollatorForLanguageModeling(tokenizer, mlm=False)
-
-
-# In[15]:
 
 
 # output_dir = f'./peft-dialogue-summary-training-{str(int(time.time()))}'
@@ -413,8 +365,6 @@ training_args = transformers.TrainingArguments(
 )
 
 
-# In[16]:
-
 
 # configure trainer
 trainer = transformers.Trainer(
@@ -431,60 +381,47 @@ model.config.use_cache = False  # silence the warnings. Please re-enable for inf
 trainer.train()
 
 
-
-# In[28]:
-
-
-with open('apollo_output_r32.txt', 'w') as f:
-    for i in range(50):
-        # Print to file instead of console
-        f.write(f"Prompt number: {i}\n\n")
+# with open('apollo_output_r32.txt', 'w') as f:
+#     for i in range(50):
+#         # Print to file instead of console
+#         f.write(f"Prompt number: {i}\n\n")
         
-        comment = test['summary'][i]
-        true_answer = test['label'][i]
+#         comment = test['summary'][i]
+#         true_answer = test['label'][i]
 
-        # Update your prompt here as needed
-        prompt = f'''<|system|>:\n {instructions_string} <|user|>: {comment} \n Would this patient get re-admitted to Intensive Care Unit?\n {output_string} \n<|assistant|>:\n '''
+#         # Update your prompt here as needed
+#         prompt = f'''<|system|>:\n {instructions_string} <|user|>: {comment} \n Would this patient get re-admitted to Intensive Care Unit?\n {output_string} \n<|assistant|>:\n '''
         
-        trainer.model.eval()
+#         trainer.model.eval()
         
-        # Create the dash line (100 dashes)
-        dash_line = '-' * 100
+#         # Create the dash line (100 dashes)
+#         dash_line = '-' * 100
         
-        # Tokenize the input prompt
-        inputs = tokenizer(prompt, return_tensors="pt")
+#         # Tokenize the input prompt
+#         inputs = tokenizer(prompt, return_tensors="pt")
         
-        # Generate the model's output
-        outputs = trainer.model.generate(
-            input_ids=inputs["input_ids"].to("cuda"), 
-            max_new_tokens=512,
-            temperature=0.3, 
-            do_sample=True
-        )
+#         # Generate the model's output
+#         outputs = trainer.model.generate(
+#             input_ids=inputs["input_ids"].to("cuda"), 
+#             max_new_tokens=512,
+#             temperature=0.3, 
+#             do_sample=True
+#         )
         
-        # Write the results to the file
-        f.write(f"{tokenizer.batch_decode(outputs)[0]}\n")
-        f.write(f"\nTrue Answer: {true_answer}\n\n")
-        f.write(f"{dash_line}\n")
+#         # Write the results to the file
+#         f.write(f"{tokenizer.batch_decode(outputs)[0]}\n")
+#         f.write(f"\nTrue Answer: {true_answer}\n\n")
+#         f.write(f"{dash_line}\n")
 
-
-# In[34]:
-
-
+#Saving the model locally
 trainer.save_model("/acfs-home/hoh4002/serag_AI_lab/users/hoh4002/eICU/Apollo/best_outputr32")
-
-
-# In[35]:
-
 
 fine_tuned_model ="Apollo_unbalanced_r32"
 trainer.model.save_pretrained(fine_tuned_model)
 print("saved")
 
 
-# In[36]:
-
-
+#Merging the model with Lora weights 
 base_model = AutoModelForCausalLM.from_pretrained(
     model_name,
     low_cpu_mem_usage = True,
@@ -494,14 +431,8 @@ base_model = AutoModelForCausalLM.from_pretrained(
 )
 
 
-# In[37]:
-
-
 fine_tuned_merged_model = PeftModel.from_pretrained(base_model, fine_tuned_model)
 fine_tuned_merged_model = fine_tuned_merged_model.merge_and_unload()
-
-
-# In[38]:
 
 
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code = True)
@@ -509,10 +440,7 @@ fine_tuned_merged_model.save_pretrained("Apollo_unbalanced_r32", safe_serializat
 tokenizer.save_pretrained("Apollo_unbalanced_r32")
 tokenizer.padding_side = "right"
 
-
-# In[39]:
-
-
+#Pushing the model to hugging face 
 tokenizer.pad_token = tokenizer.eos_token
 fine_tuned_merged_model.push_to_hub(fine_tuned_model, use_temp_dir=False,token=w_token)
 trainer.model.push_to_hub(fine_tuned_model, use_temp_dir=False,token=w_token)
