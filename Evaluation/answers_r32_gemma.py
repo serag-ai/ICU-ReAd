@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
 import torch
 import pandas as pd
 import os
@@ -21,57 +18,33 @@ from sklearn.metrics import classification_report, accuracy_score, roc_auc_score
 from sklearn.preprocessing import label_binarize
 import torch.nn.functional as F
 import evaluate 
-from datasets import (
-    load_dataset,
-    Dataset,
-    DatasetDict)
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
-    BitsAndBytesConfig,
-    TrainingArguments,
-    pipeline,
-    logging,
 )
-from peft import (
-    LoraConfig,
-    prepare_model_for_kbit_training,
-    get_peft_model
-)
-from torch.utils.data import (
-    TensorDataset,
-    DataLoader,
-    RandomSampler,
-    SequentialSampler,
-    random_split,
-    Dataset)
+from peft import PeftModel, PeftConfig
+import re
+import nltk
+from nltk import sent_tokenize
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from matplotlib import pyplot as plt
 
-#from trl import SFTTrainer
-from peft import PeftModel
+
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 os.environ['TORCH_USE_CUDA_DSA'] = "1"
 os.environ["CUDA_LAUNCH_BLOCKING"] = '1'
 os.environ['TRANSFORMERS_OFFLINE'] = '0'
 
-w_token ="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"
-r_token ="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"
-
-
-# In[2]:
+w_token ="YOUR_TOKEN"
+r_token ="YOUR_TOKEN"
 
 
 
 
-# In[3]:
-
-
-from peft import PeftModel, PeftConfig
- 
-peft_model_id = "HodaHelmy/gemma_r32_unbalanced"
+#LOADING THE MODEL FROM HUGGING FACE
+peft_model_id = "HodaHelmy/gemma_r32_unbalanced" #HUGGING FACE LIBRARY
 config = PeftConfig.from_pretrained(peft_model_id)
-
-
-# In[4]:
 
 
 model = AutoModelForCausalLM.from_pretrained(config.base_model_name_or_path)
@@ -79,18 +52,13 @@ model = PeftModel.from_pretrained(model, peft_model_id)
 tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path)
 
 
-# In[6]:
 
-
-dataset_path= '/acfs-home/hoh4002/serag_AI_lab/users/hoh4002/eICU/Gemma_August/test_set_r32.csv'
+dataset_path= '/acfs-home/hoh4002/serag_AI_lab/users/hoh4002/eICU/Gemma_August/test_set_r32.csv' #UPLOAD TEST SET
 test = pd.read_csv(dataset_path)
 test = test.drop(columns=["Unnamed: 0"])
-test
 
 
-# In[8]:
-
-
+#INSTRUCTION STRING NEEDED FOR THE PROMPT 
 instructions_string = """
 You are a virtual assistant in the intensive care unit (ICU), specialized in analyzing patient data and answering questions.
 
@@ -103,26 +71,13 @@ output_string = """
     - Explain your answer, detailing why re-admission is likely or unlikely based on the provided information.
 """
 
-
-# In[9]:
-
-
-import re
-import torch
-import torch.nn.functional as F
-import pandas as pd
-from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
-import nltk
-from nltk import sent_tokenize
-
-# Uncomment if running for the first time
 # nltk.download('punkt')
 
 # Initialize lists to store results
 predicted_labels = []
 predicted_probs = []
 
-# Define keywords and negations
+
 # Define your keywords for the search
 yes_keywords = ["yes", "likely","possibility", "potential"]
 no_keywords = ["no", "unlikely"]
@@ -130,6 +85,7 @@ no_keywords = ["no", "unlikely"]
 # Define additional negations or contradictory patterns to watch for
 negations = ["not", "unlikely", "no evidence"]
 
+#FUNCTION TO EXTRACT KEYWORDS IN THE GENERATED OUTPUT
 def analyze_sentences(sentences):
     yes_count = no_count = 0
     for sentence in sentences:
@@ -139,16 +95,14 @@ def analyze_sentences(sentences):
         # Search for Yes/No keywords only if not negated or negated appropriately
         for keyword in yes_keywords:
             if keyword in sentence and not negated:
-                #print("yes_keyword: ", sentence)
                 yes_count += 1
                 break
         for keyword in no_keywords:
-            #print("no_keyword: ", keyword)
             if keyword in sentence and negated:
                 no_count += 1
                 break
                 
-        # Handle negated cases (like "not likely" which should be treated as a "No")
+        # Handle negated cases 
         if any(neg in sentence for neg in negations):
             for keyword in yes_keywords:
                 if keyword in sentence:
@@ -164,9 +118,9 @@ def analyze_sentences(sentences):
 # Placeholder for vocab check
 vocab = tokenizer.get_vocab() if tokenizer else {}
 
-# Assuming `sampled_test` is a DataFrame containing the text and labels
+#LOOP TO GENERATE OUTPUT FROM THE FULL DATASET
 with open('generated_output_evaluation_r32_temp0.3.txt', 'w') as f:
-    for i in range(len(test)):
+    for i in range(len(test)): #YOU CAN ADD THE RANGE OF EXAMPLE YOU WANT HERE WE USED THE FULL DATASET (CONSUMES TIME)
         f.write(f"Prompt number: {i}\n\n")
         print(f"Processing Prompt {i}...")
 
@@ -228,11 +182,11 @@ with open('generated_output_evaluation_r32_temp0.3.txt', 'w') as f:
 
         outputs_log = model(**inputs.to("cuda"))
 
-        # Extract logits from the model output
+        # logits from the model output
         logits = outputs_log.logits  # Shape: [batch_size, sequence_length, vocab_size]
 
         if logits is not None:
-            # Use the last token's logits for probabilities
+            # the last token's logits for probabilities
             last_logits = logits[:, -1, :]  # Shape: [batch_size, vocab_size]
             probabilities = F.softmax(last_logits, dim=-1).cpu().numpy()  # Normalize logits
 
@@ -251,13 +205,10 @@ with open('generated_output_evaluation_r32_temp0.3.txt', 'w') as f:
 
             predicted_probs.append([yes_prob, no_prob])
 
-        # Write output to file
+        # SAVING GENERATED output to file
         f.write(f"Generated Output:\n{generated_output}\n")
         f.write(f"True Answer: {true_answer}\n\n")
         f.write('-' * 100 + '\n')
-
-
-# In[10]:
 
 
 # Convert test labels to binary (1 for 'yes', 0 for 'no')
@@ -297,18 +248,13 @@ else:
     print(f"AUC: {roc_auc:.4f}")
 
 
-# In[11]:
-
-
+##### CLASSIFICATION REPORT 
 print("Classification Report:")
 print(classification_report(valid_df["True Answer"], valid_df["Predicted"]))
 
 
-# In[12]:
 
-
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-from matplotlib import pyplot as plt
+####### CONFUSION MATRIX 
 
 cm = confusion_matrix(valid_df["True Answer"], valid_df["Predicted"])
 
