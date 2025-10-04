@@ -27,18 +27,12 @@ from evaluate import evaluator
 import evaluate
 from scipy.special import softmax
 from datasets import (
-    load_dataset,
     Dataset,
     DatasetDict)
 from transformers import (
-    AutoModelForCausalLM,
     AutoModelForSequenceClassification,
-    GemmaForSequenceClassification,
     AutoTokenizer,
     BitsAndBytesConfig,
-    TrainingArguments,
-    pipeline,
-    logging,
     Trainer,
     DataCollatorWithPadding
 )
@@ -48,14 +42,7 @@ from peft import (
     get_peft_model
 )
 from torch.utils.data import (
-    TensorDataset,
-    DataLoader,
-    RandomSampler,
-    SequentialSampler,
-    random_split,
     Dataset)
-
-#from trl import SFTTrainer
 from peft import PeftModel
 from json import encoder
 import csv
@@ -66,13 +53,12 @@ os.environ['TORCH_USE_CUDA_DSA'] = "1"
 os.environ["CUDA_LAUNCH_BLOCKING"] = '1'
 os.environ['TRANSFORMERS_OFFLINE'] = '0'
 
-w_token ="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"
-r_token ="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"
+w_token ="YOUR_TOKEN"
+r_token ="YOUR_TOKEN"
 
 
-# In[3]:
 
-
+#LOADING THE FILE
 def load_file(data_file):
     df = pd.read_csv(data_file)
     print('File loaded successfully')
