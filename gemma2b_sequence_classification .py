@@ -69,9 +69,6 @@ file_path_2 = '/acfs-home/hoh4002/serag_AI_lab/users/hoh4002/eICU/llm.csv'
 df2 = load_file(file_path_2)
 
 
-# In[4]:
-
-
 def filter_unwanted_words(diseases, unwanted_words):
     return [disease for disease in diseases if not any(word in disease for word in unwanted_words)]
 
@@ -133,21 +130,19 @@ def create_prompts(df):
     return prompts, admission_responses
 
 
-# In[5]:
+
 
 
 prompts, answers = create_prompts(df2)
 
 
-# In[6]:
+
 
 
 encoder = LabelEncoder()
 labels = answers
 encoded_labels = encoder.fit_transform(labels)
 
-
-# In[9]:
 
 
 # Stratified splitting of the dataset into train, dev, and test with a 60:20:20 ratio
@@ -279,9 +274,6 @@ model.config.pretraining_tp = 1
 model.print_trainable_parameters()
 
 
-# In[16]:
-
-
 sentences = test.summary.tolist()
 
 
@@ -317,8 +309,6 @@ test['predictions'] = y_proba.argmax(axis=1)  # Class with the highest probabili
 test['prediction_probabilities'] = y_proba[:, 1]    # Predicted probabilities for each class
 
 
-# In[17]:
-
 
 def get_metrics_result(test_df):
     y_test = test_df.label_Encoded
@@ -342,8 +332,6 @@ def get_metrics_result(test_df):
 # Call the function to get metrics
 get_metrics_result(test)
 
-
-# In[18]:
 
 
 def tokenize_function(examples):
@@ -374,8 +362,9 @@ tokenizer.pad_token = tokenizer.eos_token
 collate_fn = DataCollatorWithPadding(tokenizer=tokenizer)
 
 
-# In[19]:
 
+
+#Function to custiom train to binary labels 
 
 class CustomTrainer(Trainer):
     def __init__(self, *args, class_weights=None, **kwargs):
@@ -400,9 +389,7 @@ class CustomTrainer(Trainer):
 
         return (loss, outputs) if return_outputs else loss
 
-
-# In[20]:
-
+########### TRAINING
 
 lr = 1e-4
 batch_size = 16
@@ -463,9 +450,6 @@ def compute_metrics(eval_pred):
     }
 
 
-# In[21]:
-
-
 trainer = CustomTrainer(
     model=model,
     train_dataset=tokenized_data["train"],
@@ -487,8 +471,8 @@ results = trainer.evaluate(eval_dataset=tokenized_data["test"])
 print("Test Metrics: ",results)
 
 
-# In[22]:
 
+######Evaluation of the model on test set
 
 def generate_predictions(model, test):
     sentences = test.summary.tolist()
@@ -518,8 +502,6 @@ generate_predictions(model,test)
 get_metrics_result(test)
 
 
-# In[30]:
-
 
 def get_original_label(prediction):
     return label_encoder.inverse_transform([prediction])[0]
@@ -532,7 +514,7 @@ def predict_readmission(input_text):
     predicted_class = outputs.logits.argmax().item()
     return get_original_label(predicted_class)
  
-# Example usage
+
 prediction_two = []
 for i in range (len(test)):
     example_input = test['summary'][i]
@@ -540,30 +522,23 @@ for i in range (len(test)):
     prediction_two.append(predictions)
 
 df = pd.DataFrame({
-    "True Answer": test['label'],  # Assuming this is a list of true answers
-    "Predicted": prediction_two,          # Assuming `predictions` is a list of predictions
+    "True Answer": test['label'],  
+    "Predicted": prediction_two,        
 })
 
 df.to_csv('unbalanced_output_answers_finetuned_classification_r32_25.csv')
 
 
-# In[24]:
 
-
+#Saving the model
 trainer.save_model("/acfs-home/hoh4002/serag_AI_lab/users/hoh4002/eICU/gemma_sequence/best_r32_output_25")
-
-
-# In[25]:
-
 
 fine_tuned_model ="Gemma2B_Seq_class"
 trainer.model.save_pretrained(fine_tuned_model)
 print("saved")
 
 
-# In[26]:
-
-
+#Merging lora weights with the model
 base_model = AutoModelForSequenceClassification.from_pretrained(
     model_name,
     low_cpu_mem_usage = True,
@@ -572,24 +547,13 @@ base_model = AutoModelForSequenceClassification.from_pretrained(
     device_map = {"": 0}
 )
 
-
-# In[27]:
-
-
 fine_tuned_merged_model = PeftModel.from_pretrained(base_model, fine_tuned_model)
 fine_tuned_merged_model = fine_tuned_merged_model.merge_and_unload()
-
-
-# In[28]:
-
 
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code = True)
 fine_tuned_merged_model.save_pretrained("Gemma2B_Seq_class", safe_serialization = True)
 tokenizer.save_pretrained("Gemma2B_Seq_class")
 tokenizer.padding_side = "right"
-
-
-# In[29]:
 
 
 tokenizer.pad_token = tokenizer.eos_token
@@ -598,7 +562,6 @@ trainer.model.push_to_hub(fine_tuned_model, use_temp_dir=False,token=w_token)
 tokenizer.push_to_hub(fine_tuned_model, use_temp_dir=False,token=w_token)
 
 
-# In[ ]:
 
 
 

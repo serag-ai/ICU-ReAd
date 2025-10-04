@@ -65,7 +65,8 @@ df2 = load_file(file_path_2)
 def filter_unwanted_words(diseases, unwanted_words):
     return [disease for disease in diseases if not any(word in disease for word in unwanted_words)]
 
-# Function to create prompts for each row
+# Function to create prompts for each row in a taboluar dataset
+#Turning table into a sentence 
 def create_prompts(df):
     prompts = []
     admission_responses = []
