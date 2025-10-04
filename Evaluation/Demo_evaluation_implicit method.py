@@ -44,6 +44,7 @@ r_token ="YOUR_TOKEN"
 
 #LOADING THE MODEL FROM HUGGING FACE
 peft_model_id = "HodaHelmy/gemma_r32_unbalanced" #HUGGING FACE LIBRARY
+#preft_model_id = "HodaHelmy/Apollo_unbalanced_r32" #For apollo model
 config = PeftConfig.from_pretrained(peft_model_id)
 
 
