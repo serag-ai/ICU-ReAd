@@ -77,7 +77,7 @@ def create_prompts(df):
     prompts = []
     admission_responses = []
     
-    unwanted_words = ['performed']  # Add any other unwanted words here
+    unwanted_words = ['performed']  
     
     disease_columns = [col for col in df.columns if col.startswith('Diagnose_')]
     
