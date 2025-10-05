@@ -6,6 +6,7 @@
 
 import torch
 import pandas as pd
+import numpy as np
 import os
 import time
 import datetime
@@ -31,14 +32,9 @@ from datasets import (
     Dataset,
     DatasetDict)
 from transformers import (
-    AutoModelForCausalLM,
     AutoModelForSequenceClassification,
-    GemmaForSequenceClassification,
     AutoTokenizer,
     BitsAndBytesConfig,
-    TrainingArguments,
-    pipeline,
-    logging,
     Trainer,
     DataCollatorWithPadding
 )
@@ -48,31 +44,25 @@ from peft import (
     get_peft_model
 )
 from torch.utils.data import (
-    TensorDataset,
-    DataLoader,
-    RandomSampler,
-    SequentialSampler,
-    random_split,
     Dataset)
-
-#from trl import SFTTrainer
 from peft import PeftModel
 from json import encoder
 import csv
 from sklearn.preprocessing import LabelEncoder
+from datasets import Dataset, DatasetDict
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 os.environ['TORCH_USE_CUDA_DSA'] = "1"
 os.environ["CUDA_LAUNCH_BLOCKING"] = '1'
 os.environ['TRANSFORMERS_OFFLINE'] = '0'
 
-w_token ="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"
-r_token ="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"
+w_token ="YOUR_TOKEN"
+r_token ="YOUR_TOKEN"
 
 
-# In[3]:
 
 
+#UPLOADING THE FILE
 def load_file(data_file):
     df = pd.read_csv(data_file)
     print('File loaded successfully')
@@ -83,9 +73,7 @@ file_path_2 = '/acfs-home/hoh4002/serag_AI_lab/users/hoh4002/eICU/llm.csv'
 df2 = load_file(file_path_2)
 
 
-# In[4]:
-
-
+#CREATING TEXT PROMPT FROM TABULAR DATASET
 def filter_unwanted_words(diseases, unwanted_words):
     return [disease for disease in diseases if not any(word in disease for word in unwanted_words)]
 
@@ -94,7 +82,7 @@ def create_prompts(df):
     prompts = []
     admission_responses = []
     
-    unwanted_words = ['performed']  # Add any other unwanted words here
+    unwanted_words = ['performed'] 
     
     disease_columns = [col for col in df.columns if col.startswith('Diagnose_')]
     
@@ -147,21 +135,14 @@ def create_prompts(df):
     return prompts, admission_responses
 
 
-# In[5]:
-
 
 prompts, answers = create_prompts(df2)
 
-
-# In[6]:
-
-
+#CREATING LABELS 
 encoder = LabelEncoder()
 labels = answers
 encoded_labels = encoder.fit_transform(labels)
 
-
-# In[9]:
 
 
 # Stratified splitting of the dataset into train, dev, and test with a 60:20:20 ratio
@@ -202,7 +183,8 @@ train_list = train.to_dict(orient='records')
 dev_list = dev.to_dict(orient='records')
 test_list = test.to_dict(orient='records')
 
-from datasets import Dataset, DatasetDict
+
+### CREATING DATASET DICT
 dataset = DatasetDict({
     'train': Dataset.from_list(train_list),
     'dev': Dataset.from_list(dev_list),
@@ -211,18 +193,13 @@ dataset = DatasetDict({
 dataset
 
 
-# In[12]:
-
-
 class_weights = (1/train.label_Encoded.value_counts(normalize=True).sort_index()).tolist()
 class_weights = torch.tensor(class_weights)
 class_weights = class_weights/class_weights.sum()
 class_weights
 
 
-# In[13]:
-
-
+#UPLOADING THE MODEL
 commit_message = "Fine-tuning FreedomIntelligence/Apollo-2B on ICU dataset with shorter prompt"
 
 model_name = "FreedomIntelligence/Apollo-2B"
@@ -230,10 +207,7 @@ model_name = "FreedomIntelligence/Apollo-2B"
 wandb.login(key="30b0271bbe141a329715cc74ff244a878c770e8c")
 
 
-# In[14]:
-
-
-import numpy as np
+## CONFIGRATION
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
     bnb_4bit_use_double_quant=True,
@@ -243,7 +217,6 @@ bnb_config = BitsAndBytesConfig(
 num_labels = len(np.unique(encoded_labels))
 print(num_labels)
 
-#"TheBloke/Mistral-7B-Instruct-v0.2-GPTQ"
 model = AutoModelForSequenceClassification.from_pretrained(model_name, #model_name
                                              quantization_config=bnb_config,
                                              device_map="auto",# automatically figures out how to best use CPU + GPU for loading model
@@ -261,9 +234,7 @@ tokenizer.add_eos_token = True
 tokenizer.add_bos_token, tokenizer.add_eos_token
 
 
-# In[15]:
-
-
+### MODEL FINE TUNING
 model.train() # model in training mode (dropout modules are activated)
 
 # enable gradient check pointing
@@ -293,14 +264,10 @@ model.config.pretraining_tp = 1
 model.print_trainable_parameters()
 
 
-# In[16]:
 
 
 sentences = test.summary.tolist()
 
-# batch_size = 32  
-
-# all_outputs = []
 
 all_outputs = []
 batch_size = 32  # Example batch size
@@ -333,9 +300,7 @@ test['predictions'] = y_proba.argmax(axis=1)  # Class with the highest probabili
 test['prediction_probabilities'] = y_proba[:, 1]    # Predicted probabilities for each class
 
 
-# In[17]:
-
-
+#METRICS 
 def get_metrics_result(test_df):
     y_test = test_df.label_Encoded
     y_pred = test_df.predictions
@@ -359,9 +324,7 @@ def get_metrics_result(test_df):
 get_metrics_result(test)
 
 
-# In[18]:
-
-
+#TOKENIZER FUNCTION
 def tokenize_function(examples):
     # extract text
     text = examples["summary"]
@@ -390,9 +353,6 @@ tokenizer.pad_token = tokenizer.eos_token
 collate_fn = DataCollatorWithPadding(tokenizer=tokenizer)
 
 
-# In[19]:
-
-
 class CustomTrainer(Trainer):
     def __init__(self, *args, class_weights=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -417,9 +377,7 @@ class CustomTrainer(Trainer):
         return (loss, outputs) if return_outputs else loss
 
 
-# In[20]:
-
-
+#HYPER-PARAMETERS 
 lr = 1e-4
 batch_size = 16
 num_epochs = 2
@@ -479,9 +437,6 @@ def compute_metrics(eval_pred):
     }
 
 
-# In[21]:
-
-
 trainer = CustomTrainer(
     model=model,
     train_dataset=tokenized_data["train"],
@@ -503,9 +458,8 @@ results = trainer.evaluate(eval_dataset=tokenized_data["test"])
 print("Test Metrics: ",results)
 
 
-# In[22]:
 
-
+#EVALUATION ON TEST SET
 def generate_predictions(model, test):
     sentences = test.summary.tolist()
     batch_size = 32  
@@ -534,9 +488,6 @@ generate_predictions(model,test)
 get_metrics_result(test)
 
 
-# In[30]:
-
-
 def get_original_label(prediction):
     return label_encoder.inverse_transform([prediction])[0]
  
@@ -556,20 +507,17 @@ for i in range (len(test)):
     prediction_two.append(predictions)
 
 df = pd.DataFrame({
-    "True Answer": test['label'],  # Assuming this is a list of true answers
-    "Predicted": prediction_two,          # Assuming `predictions` is a list of predictions
+    "True Answer": test['label'],  
+    "Predicted": prediction_two,         
 })
 
 df.to_csv('unbalanced_output_answers_finetuned_classification_r32_seq_25.csv')
 
 
-# In[24]:
 
 
+## SAVING THE MODEL
 trainer.save_model("/acfs-home/hoh4002/serag_AI_lab/users/hoh4002/eICU/Apollo/best_r32_output_seq_25")
-
-
-# In[25]:
 
 
 fine_tuned_model ="Apollo2B_Seq_class"
@@ -577,9 +525,7 @@ trainer.model.save_pretrained(fine_tuned_model)
 print("saved")
 
 
-# In[26]:
-
-
+#MERGING MODEL WITH FINE TUNED WEIGHTS 
 base_model = AutoModelForSequenceClassification.from_pretrained(
     model_name,
     low_cpu_mem_usage = True,
@@ -589,32 +535,19 @@ base_model = AutoModelForSequenceClassification.from_pretrained(
 )
 
 
-# In[27]:
-
-
 fine_tuned_merged_model = PeftModel.from_pretrained(base_model, fine_tuned_model)
 fine_tuned_merged_model = fine_tuned_merged_model.merge_and_unload()
-
-
-# In[28]:
-
 
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code = True)
 fine_tuned_merged_model.save_pretrained("Apollo2B_Seq_class", safe_serialization = True)
 tokenizer.save_pretrained("Apollo2B_Seq_class")
 tokenizer.padding_side = "right"
 
-
-# In[29]:
-
-
 tokenizer.pad_token = tokenizer.eos_token
 fine_tuned_merged_model.push_to_hub(fine_tuned_model, use_temp_dir=False,token=w_token)
 trainer.model.push_to_hub(fine_tuned_model, use_temp_dir=False,token=w_token)
 tokenizer.push_to_hub(fine_tuned_model, use_temp_dir=False,token=w_token)
 
-
-# In[ ]:
 
 
 
