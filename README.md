@@ -29,10 +29,10 @@ This project explores the use of large language models (LLMs) to predict ICU rea
 
 | Model Name | Parameters | Description | Hugging Face Link |
 |-------------|-------------|--------------|-------------------|
-| Explicit Gemma 2B (FT)| 3B | Explicit Classification method| [🤗 View Model](https://huggingface.co/HodaHelmy/Gemma2B_Seq_class) |
-| Explicit Apollo 2B (FT) | 3B | Explicit Classification method | [🤗 View Model](https://huggingface.co/HodaHelmy/Apollo2B_Seq_class) |
-| Implicit Gemma 2B (FT) | 3B | Implicit Classification method with text generation | [🤗 View Model](https://huggingface.co/HodaHelmy/gemma_r32_unbalanced) |
-| Implicit Apollo 2B (FT)| 3B | Implicit Classification method with text generation | [🤗 View Model](https://huggingface.co/HodaHelmy/Apollo_unbalanced_r32) |
+| Explicit Gemma 2B (FT)| 3B | Explicit Classification method| [🤗 View Model](https://huggingface.co/serag-ai/explicit_GEMMA_ICU) |
+| Explicit Apollo 2B (FT) | 3B | Explicit Classification method | [🤗 View Model](https://huggingface.co/serag-ai/explicit_APOLLO_ICU) |
+| Implicit Gemma 2B (FT) | 3B | Implicit Classification method with text generation | [🤗 View Model](https://huggingface.co/serag-ai/implicit_GEMMA_ICU) |
+| Implicit Apollo 2B (FT)| 3B | Implicit Classification method with text generation | [🤗 View Model](https://huggingface.co/serag-ai/implicit_APOLLO_ICU) |
 
 > To load models directly in Python for text generation:
 ```python
