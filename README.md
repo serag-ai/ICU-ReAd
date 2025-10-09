@@ -18,11 +18,14 @@ This project explores the use of large language models (LLMs) to predict ICU rea
 
 ## Key Features
 
-- **Utilized Large Language Models (LLMs) to predict unplanned ICU re-admission from Electronic Health Records (EHRs).
-- **Developed a serialization approach to transform structured EHR data into a text-based format for LLM processing. 
-- **Investigated explicit classification (binary labels) and implicit classification (text generation) to enhance interpretability.  
-- **Demonstrated the potential of LLMs in clinical decision support by generating interpretable insights for ICU physicians.
+- Utilized Large Language Models (LLMs) to predict unplanned ICU re-admission from Electronic Health Records (EHRs).
+- Developed a serialization approach to transform structured EHR data into a text-based format for LLM processing. 
+- Investigated explicit classification (binary labels) and implicit classification (text generation) to enhance interpretability.  
+- Demonstrated the potential of LLMs in clinical decision support by generating interpretable insights for ICU physicians.
 
+---
+## Dataset
+https://eicu-crd.mit.edu/gettingstarted/access/
 ---
 
 ## Model from HUGGING FACE 🤗
