@@ -18,21 +18,24 @@ This project explores the use of large language models (LLMs) to predict ICU rea
 
 ## Key Features
 
-- **Utilized Large Language Models (LLMs) to predict unplanned ICU re-admission from Electronic Health Records (EHRs).
-- **Developed a serialization approach to transform structured EHR data into a text-based format for LLM processing. 
-- **Investigated explicit classification (binary labels) and implicit classification (text generation) to enhance interpretability.  
-- **Demonstrated the potential of LLMs in clinical decision support by generating interpretable insights for ICU physicians.
+- Utilized Large Language Models (LLMs) to predict unplanned ICU re-admission from Electronic Health Records (EHRs).
+- Developed a serialization approach to transform structured EHR data into a text-based format for LLM processing. 
+- Investigated explicit classification (binary labels) and implicit classification (text generation) to enhance interpretability.  
+- Demonstrated the potential of LLMs in clinical decision support by generating interpretable insights for ICU physicians.
 
+---
+## Dataset
+https://eicu-crd.mit.edu/gettingstarted/access/
 ---
 
 ## Model from HUGGING FACE 🤗
 
 | Model Name | Parameters | Description | Hugging Face Link |
 |-------------|-------------|--------------|-------------------|
-| Explicit Gemma 2B (FT)| 3B | Explicit Classification method| [🤗 View Model](https://huggingface.co/HodaHelmy/Gemma2B_Seq_class) |
-| Explicit Apollo 2B (FT) | 3B | Explicit Classification method | [🤗 View Model](https://huggingface.co/HodaHelmy/Apollo2B_Seq_class) |
-| Implicit Gemma 2B (FT) | 3B | Implicit Classification method with text generation | [🤗 View Model](https://huggingface.co/HodaHelmy/gemma_r32_unbalanced) |
-| Implicit Apollo 2B (FT)| 3B | Implicit Classification method with text generation | [🤗 View Model](https://huggingface.co/HodaHelmy/Apollo_unbalanced_r32) |
+| Explicit Gemma 2B (FT)| 3B | Explicit Classification method| [🤗 View Model](https://huggingface.co/serag-ai/explicit_GEMMA_ICU) |
+| Explicit Apollo 2B (FT) | 3B | Explicit Classification method | [🤗 View Model](https://huggingface.co/serag-ai/explicit_APOLLO_ICU) |
+| Implicit Gemma 2B (FT) | 3B | Implicit Classification method with text generation | [🤗 View Model](https://huggingface.co/serag-ai/implicit_GEMMA_ICU) |
+| Implicit Apollo 2B (FT)| 3B | Implicit Classification method with text generation | [🤗 View Model](https://huggingface.co/serag-ai/implicit_APOLLO_ICU) |
 
 > To load models directly in Python for text generation:
 ```python
