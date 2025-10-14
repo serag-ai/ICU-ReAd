@@ -47,8 +47,6 @@ r_token ='YOUR_TOKEN'
 
 
 from huggingface_hub import login
-# HUGGINGFACE_TOKEN = os.environ.get("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")
-# login(token=HUGGINGFACE_TOKEN)
 
 #Loading the files (Full dataset)
 
