@@ -9,7 +9,7 @@
 ## Overview
 
 This repository contains the code and models introduced in our paper:  
-> **Leveraging large language models to predict unplanned ICU readmissions from electronic health records"**  
+> **"Leveraging large language models to predict unplanned ICU readmissions from electronic health records"**  
 > *Helmy, Hoda, Ahmed Ibrahim, Maryam Arabi, Aamenah Sattar, and Ahmed Serag. Natural Language Processing Journal (2025)*  
 
 This project explores the use of large language models (LLMs) to predict ICU readmissions and generate clinical explanations. Two open-source models, Gemma 2B and Apollo 2B, were fine-tuned and compared.
