@@ -9,8 +9,8 @@
 ## Overview
 
 This repository contains the code and models introduced in our paper:  
-> **"Leveraging Large Language Models to Predict Unplanned ICU Readmissions from Electronic Health Records"**  
-> *Hoda Helmy et al., Weill Cornell Medicine–Qatar (2025)*  
+> **Leveraging large language models to predict unplanned ICU readmissions from electronic health records"**  
+> *Helmy, Hoda, Ahmed Ibrahim, Maryam Arabi, Aamenah Sattar, and Ahmed Serag. Natural Language Processing Journal (2025)*  
 
 This project explores the use of large language models (LLMs) to predict ICU readmissions and generate clinical explanations. Two open-source models, Gemma 2B and Apollo 2B, were fine-tuned and compared.
 
@@ -32,10 +32,10 @@ https://eicu-crd.mit.edu/gettingstarted/access/
 
 | Model Name | Parameters | Description | Hugging Face Link |
 |-------------|-------------|--------------|-------------------|
-| Explicit Gemma 2B (FT)| 3B | Explicit Classification method| [🤗 View Model](https://huggingface.co/serag-ai/explicit_GEMMA_ICU) |
-| Explicit Apollo 2B (FT) | 3B | Explicit Classification method | [🤗 View Model](https://huggingface.co/serag-ai/explicit_APOLLO_ICU) |
-| Implicit Gemma 2B (FT) | 3B | Implicit Classification method with text generation | [🤗 View Model](https://huggingface.co/serag-ai/implicit_GEMMA_ICU) |
-| Implicit Apollo 2B (FT)| 3B | Implicit Classification method with text generation | [🤗 View Model](https://huggingface.co/serag-ai/implicit_APOLLO_ICU) |
+| Explicit Gemma 2B (FT)| 3B | Explicit Classification method| [🤗 View Model](https://huggingface.co/serag-ai/ICU-GEMMA-EXP) |
+| Explicit Apollo 2B (FT) | 3B | Explicit Classification method | [🤗 View Model](https://huggingface.co/serag-ai/ICU-APOLLO-EXP) |
+| Implicit Gemma 2B (FT) | 3B | Implicit Classification method with text generation | [🤗 View Model](https://huggingface.co/serag-ai/ICU-GEMMA-IMP) |
+| Implicit Apollo 2B (FT)| 3B | Implicit Classification method with text generation | [🤗 View Model](https://huggingface.co/serag-ai/ICU-APOLLO-IMP) |
 
 > To load models directly in Python for text generation:
 ```python
