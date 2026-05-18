@@ -2,8 +2,8 @@
 
 
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-green.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![Conference Paper](https://img.shields.io/badge/Conference-Paper-blue.svg)](https://link.springer.com/chapter/10.1007/978-3-031-82007-6_10)
-[![Journal Paper](https://img.shields.io/badge/Journal-Paper-red.svg)](https://www.sciencedirect.com/science/article/pii/S2949719125000585?via%3Dihub)
+[![Conference Version Paper](https://img.shields.io/badge/Conference-Paper-blue.svg)](https://link.springer.com/chapter/10.1007/978-3-031-82007-6_10)
+[![Journal Version Paper](https://img.shields.io/badge/Journal-Paper-red.svg)](https://www.sciencedirect.com/science/article/pii/S2949719125000585?via%3Dihub)
 
 ---
 
