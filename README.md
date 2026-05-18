@@ -13,6 +13,8 @@ This repository contains the code and models introduced in our paper:
 > **"Leveraging large language models to predict unplanned ICU readmissions from electronic health records"**  
 > *Helmy, Hoda, Ahmed Ibrahim, Maryam Arabi, Aamenah Sattar, and Ahmed Serag. Natural Language Processing Journal (2025)*
 > *[Download Paper](https://www.sciencedirect.com/science/article/pii/S2949719125000585)*
+>
+![Model Architecture](ICU_Framework.png)
 
 ---
 
