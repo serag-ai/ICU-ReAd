@@ -49,3 +49,22 @@ config = PeftConfig.from_pretrained(peft_model_id)
 model = AutoModelForCausalLM.from_pretrained(config.base_model_name_or_path)
 model = PeftModel.from_pretrained(model, peft_model_id)
 tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path)
+```
+---
+## Citation
+
+If you use this work in your research, please cite:
+
+```bibtex
+@article{HELMY2025100182,
+title = {Leveraging large language models to predict unplanned ICU readmissions from electronic health records},
+journal = {Natural Language Processing Journal},
+volume = {13},
+pages = {100182},
+year = {2025},
+issn = {2949-7191},
+doi = {https://doi.org/10.1016/j.nlp.2025.100182},
+url = {https://www.sciencedirect.com/science/article/pii/S2949719125000585},
+author = {Hoda Helmy and Ahmed Ibrahim and Maryam Arabi and Aamenah Sattar and Ahmed Serag}
+}
+```
